@@ -1,4 +1,4 @@
-import app from "./App.js";
+import app from "./app.js";
 import cloudinary from "cloudinary";
 cloudinary.v2.config({ //based on config file
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

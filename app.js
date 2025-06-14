@@ -1,42 +1,34 @@
-import express from "express";
-import userRouter from "./router/userRouter.js";
-import {config} from "dotenv";
-import cors from "cors"; //connecting frontend
-const app= express();
-config({ path: "./config/config.env" });
-import fileUpload from "express-fileupload";
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const userRouter = require("./routes/userRouter");
+const errorHandler = require("./middlewares/errorHandlerMiddleware");
+const categoryRouter = require("./routes/categoryRouter");
+const transactionRouter = require("./routes/transactionRouter");
+const app = express();
 
-import { databaseworking } from "./database/databaseworking.js";
-import cookieParser from "cookie-parser";
+//!Connect to mongodb
+mongoose
+  .connect("mongodb://localhost:27017/mern-expenses")
+  .then(() => console.log("DB Connected"))
+  .catch((e) => console.log(e));
 
-import messageRouter from "./router/messageRouter.js";
-import { errorMiddleware } from "./middlewares/errorMiddleware.js";
-import appointmentRouter from "./router/appointmentRouter.js";
-app.use(cookieParser());
-app.use(express.json());
+//! Cors config
+const corsOptions = {
+  origin: ["http://localhost:5173"],
+};
+app.use(cors(corsOptions));
+//!Middlewares
+app.use(express.json()); //?Pass incoming json data
+//!Routes
+app.use("/", userRouter);
+app.use("/", categoryRouter);
+app.use("/", transactionRouter);
+//! Error
+app.use(errorHandler);
 
-databaseworking();
-
-app.use(
-    cors({
-        origin: [process.env.FRONTEND_URL, process.env.DASHBOARD_URL],
-        method: ["GET", "POST", "DELETE", "PUT"],
-        credentials: true,
-    })
+//!Start the server
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () =>
+  console.log(`Server is running on this port... ${PORT} `)
 );
-app.use(express.urlencoded({extended: true}));  //date etc. readable
-
-app.use(  //accoring to documentaion
-    fileUpload({
-      useTempFiles: true,
-      tempFileDir: "/tmp/",
-    })
-  );
-
-
-app.use("/api/v1/message", messageRouter);
-app.use("/api/v1/user", userRouter);
-app.use("/api/v1/appointment", appointmentRouter);
-
-app.use(errorMiddleware);
-export default app;
